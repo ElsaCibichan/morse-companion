@@ -4,6 +4,7 @@ import 'splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:tflite_flutter/tflite_flutter.dart';
 
 
 void main() async {
@@ -37,18 +38,22 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   TextEditingController receivedInputController = TextEditingController();
-
+  bool _isLoading = true;
   DatabaseReference _testRef1 = FirebaseDatabase.instance.ref().child('blinkDuration1');
   DatabaseReference _testRef2 = FirebaseDatabase.instance.ref().child('blinkDuration2');
   DatabaseReference _testRef3 = FirebaseDatabase.instance.ref().child('blinkDuration3');
-
+  var result = "";
+  late Interpreter interpreter;
 
   @override
   void initState() {
     super.initState();
+    
     // Subscribe to Bluetooth data stream here
     receivedInputController.addListener(() {
     _speak(receivedInputController.text);
+    
+    
   });
 
   // Listening to Firebase Realtime Database changes
@@ -80,6 +85,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
           // Print the blink durations to the console
           print('Blink Duration 2: $blinkDuration2');
+          
         });
       }
     });
@@ -96,12 +102,76 @@ class _MyHomePageState extends State<MyHomePage> {
 
           // Print the blink durations to the console
           print('Blink Duration 3: $blinkDuration3');
+          
         });
       }
     });
+    
   }
+  Future<void> loadModel() async {
+    interpreter = await Interpreter.fromAsset('assets/converted_model.tflite');
+    setState(() {
+      _isLoading = false;
+    });
+    print(blinkDuration1);
+    print(blinkDuration2);
+    print(blinkDuration3);
+    runModel(blinkDuration1,blinkDuration2,blinkDuration3);
+  }
+  Future<void> runModel(int input1, int input2, int input3) async {
+  if (_isLoading) return;
+  //print("Entered model ftn");
 
-  
+  // Assign specific values for testing
+
+  // // Print inputs for verification
+  print(input1);
+  print(input2);
+  print(input3);
+
+  // Perform inference
+  var output = List.filled(1 * 8, 0.0).reshape([1, 8]); // Ensure output shape matches model output
+  interpreter.run([input1.toDouble(), input2.toDouble(), input3.toDouble()], output);
+
+  // Find the index of the class with the highest probability
+  var maxIndex = output[0].indexOf(output[0].reduce((double curr, double next) => curr > next ? curr : next));
+
+  // Increment maxIndex by 1 to get the predicted integer value
+  var predictedValue = maxIndex + 1;
+  var predictedPhrase = "";
+    switch(predictedValue){
+      case 1:predictedPhrase = "I feel pain";
+      break;
+      case 2:predictedPhrase = "I need medicine";
+      break;
+      case 3:predictedPhrase = "I am hungry";
+      break;
+      case 4:predictedPhrase = "I am thirsty";
+      break;
+      case 5:predictedPhrase = "I need help";
+      break;
+      case 6:predictedPhrase = "I need to use the washroom";
+      break;
+      case 7:predictedPhrase = "I feel cold";
+      break;
+      case 8:predictedPhrase = "I feel hot";
+      break;
+      default:predictedPhrase = "Unable to predict";
+      break;
+    }
+    print(predictedPhrase);
+    setState(() {
+      //print(predictedPhrase);
+      result = predictedPhrase;
+    });
+ 
+}
+
+  // Run inference on the loaded model
+
+    
+
+
 
 
   Future<void> _speak(String text) async {
@@ -152,6 +222,7 @@ class _MyHomePageState extends State<MyHomePage> {
     _testRef.onValue.listen(
       (event) {
         setState(() {
+          loadModel();
           realTimeValue = event.snapshot.value.toString();
         });
       },
@@ -174,7 +245,7 @@ class _MyHomePageState extends State<MyHomePage> {
               padding: const EdgeInsets.all(8.0),
               child: TextField(
                 controller:
-                    receivedInputController..text = realTimeValue, // Use the TextEditingController here
+                    receivedInputController..text = result, // Use the TextEditingController here
                 readOnly: true, // Make the TextField read-only
                 decoration: InputDecoration(
                   hintText: 'Received input here',
