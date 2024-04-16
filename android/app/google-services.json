@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "677311243873",
+    "firebase_url": "https://esp32-mc-default-rtdb.firebaseio.com",
+    "project_id": "esp32-mc",
+    "storage_bucket": "esp32-mc.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:677311243873:android:6dd1047219714258fa6c20",
+        "android_client_info": {
+          "package_name": "com.example.morse_companion"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDhU3LFLPI7K1jg-8Se0uFX6yXlbPBZZcw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
