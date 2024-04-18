@@ -38,6 +38,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   TextEditingController receivedInputController = TextEditingController();
+  TextEditingController screenValueController = TextEditingController();
   bool _isLoading = true;
   DatabaseReference _testRef1 = FirebaseDatabase.instance.ref().child('blinkDuration1');
   DatabaseReference _testRef2 = FirebaseDatabase.instance.ref().child('blinkDuration2');
@@ -102,6 +103,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
           // Print the blink durations to the console
           print('Blink Duration 3: $blinkDuration3');
+          loadModel();
           
         });
       }
@@ -113,9 +115,9 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       _isLoading = false;
     });
-    print(blinkDuration1);
-    print(blinkDuration2);
-    print(blinkDuration3);
+    //print(blinkDuration1);
+    //print(blinkDuration2);
+    //print(blinkDuration3);
     runModel(blinkDuration1,blinkDuration2,blinkDuration3);
   }
   Future<void> runModel(int input1, int input2, int input3) async {
@@ -125,9 +127,9 @@ class _MyHomePageState extends State<MyHomePage> {
   // Assign specific values for testing
 
   // // Print inputs for verification
-  print(input1);
-  print(input2);
-  print(input3);
+  //print(input1);
+  //print(input2);
+  //print(input3);
 
   // Perform inference
   var output = List.filled(1 * 8, 0.0).reshape([1, 8]); // Ensure output shape matches model output
@@ -159,20 +161,13 @@ class _MyHomePageState extends State<MyHomePage> {
       default:predictedPhrase = "Unable to predict";
       break;
     }
-    print(predictedPhrase);
+    print("Predicted Phrase: $predictedPhrase");
     setState(() {
       //print(predictedPhrase);
       result = predictedPhrase;
     });
  
 }
-
-  // Run inference on the loaded model
-
-    
-
-
-
 
   Future<void> _speak(String text) async {
   await flutterTts.setLanguage('en-US');
@@ -184,7 +179,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   final Future<FirebaseApp> _fApp = Firebase.initializeApp();
   String realTimeValue = '0';
-  String getOnceValue = '0';
+  String screenValue = '0';
 
   int blinkDuration1 = 0;
   int blinkDuration2 = 0;
@@ -218,12 +213,21 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget buildUI() {
     DatabaseReference _testRef = FirebaseDatabase.instance.ref().child('data');
+     DatabaseReference _testRef4 = FirebaseDatabase.instance.ref().child('screen');
     //listening to firebase realtime database value
     _testRef.onValue.listen(
       (event) {
         setState(() {
-          loadModel();
+          //loadModel();
           realTimeValue = event.snapshot.value.toString();
+        });
+      },
+    );
+
+    _testRef4.onValue.listen(
+      (event) {
+        setState(() {
+          screenValue = event.snapshot.value.toString();
         });
       },
     );
@@ -254,32 +258,30 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
           ),
-          // Frequently Used Phrases ListView
+
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Text(
-              'Frequently Used Phrases:',
+              'Monitor:',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
           Expanded(
-            child: ListView(
-              children: [
-                ListTile(
-                  title: Text('I am hungry'),
-                  onTap: () {},
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextField(
+                controller:
+                    screenValueController..text = screenValue, // Use the TextEditingController here
+                readOnly: true, // Make the TextField read-only
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                decoration: InputDecoration(
+                  hintText: 'Received input here',
+                  border: OutlineInputBorder(),
                 ),
-                ListTile(
-                  title: Text('I feel pain : ...'),
-                  onTap: () {},
-                ),
-                ListTile(
-                  title: Text('I feel hot: ---'),
-                  onTap: () {},
-                ),
-              ],
+              ),
             ),
           ),
+          
         ],
       ),
     );
